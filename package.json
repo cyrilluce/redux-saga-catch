@@ -1,0 +1,35 @@
+{
+  "name": "redux-saga-catch",
+  "version": "0.0.1",
+  "description": "Helper for redux-saga, auto wrap saga with try-catch, prevent one throw stop all.",
+  "main": "src/index.js",
+  "dependencies": {
+    "redux-saga": "^0.15.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyrilluce/redux-saga-catch.git"
+  },
+  "keywords": [
+    "redux",
+    "saga",
+    "catch",
+    "trycatch",
+    "error",
+    "exception",
+    "robust"
+  ],
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "author": "cyrilluce@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cyrilluce/redux-saga-catch/issues"
+  },
+  "homepage": "https://github.com/cyrilluce/redux-saga-catch#readme"
+}

@@ -18,13 +18,16 @@ import {
  * @param {Saga} saga 
  */
 export function tryCatch(saga) {
-  return function* wrappedTryCatch() {
+  const wrapped = function* wrappedTryCatch() {
     try {
-      yield* saga(...arguments);
+      yield* saga(...arguments)
     } catch (e) {
-      console.error(`Error caught by redux-saga-catch`, e);
+      console.error('Error caught by redux-saga-catch', e)
     }
-  };
+  }
+  /** For debug trace. 用于调试时跟踪原始代码 */
+  wrapped._original = saga
+  return wrapped
 }
 
 /**

@@ -20,7 +20,7 @@ import {
 export function tryCatch(saga) {
   const wrapped = function* wrappedTryCatch() {
     try {
-      yield* saga(...arguments)
+      yield call(saga, ...arguments)
     } catch (e) {
       console.error('Error caught by redux-saga-catch', e)
     }

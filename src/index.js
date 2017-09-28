@@ -20,14 +20,14 @@ import {
 export function tryCatch(saga) {
   const wrapped = function* wrappedTryCatch() {
     try {
-      yield call(saga, ...arguments)
+      yield call(saga, ...arguments);
     } catch (e) {
-      console.error('Error caught by redux-saga-catch', e)
+      console.error("Error caught by redux-saga-catch", e);
     }
-  }
+  };
   /** For debug trace. 用于调试时跟踪原始代码 */
-  wrapped._original = saga
-  return wrapped
+  wrapped._original = saga;
+  return wrapped;
 }
 
 /**
@@ -78,4 +78,27 @@ export function parallel(sagas) {
       yield spawn(sagas[i]);
     }
   }, sagas);
+}
+
+/**
+ * similar to takeLatest, buy fork saga first.
+ * 与takeLatest相似，但会先fork执行一次saga。
+ * takeLatest:  while( pattern ){ saga }
+ * runAndTakeLatest:  do{ saga }while( pattern )
+ * @param {*} pattern 
+ * @param {*} saga 
+ * @param {*} args 
+ */
+export function runAndTakeLatest(pattern, saga, ...args) {
+  saga = tryCatch(saga);
+  return fork(function*() {
+    let lastTask, action;
+    while (true) {
+      if (lastTask) {
+        yield cancel(lastTask); // cancel is no-op if the task has already terminated
+      }
+      lastTask = yield fork(saga, ...args, action);
+      action = yield take(pattern);
+    }
+  });
 }

@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-catch",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Helper for redux-saga, auto wrap saga with try-catch, prevent one throw stop all.",
   "main": "src/index.js",
   "dependencies": {

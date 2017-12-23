@@ -9,7 +9,6 @@ import {
   takeLatest as _takeLatest,
   throttle as _throttle,
   call,
-  spawn,
   fork,
   cancel,
   take
@@ -25,7 +24,7 @@ export function tryCatch(saga) {
     try {
       yield call(saga, ...arguments);
     } catch (e) {
-      console.error("Error caught by redux-saga-catch", e);
+      console.error("Error caught by redux-saga-catch: ", e);
     }
   };
   /** For debug trace. 用于调试时跟踪原始代码 */
@@ -78,7 +77,7 @@ export function throttle(ms, pattern, worker, ...args) {
 export function parallel(sagas) {
   return call(function*(sagas) {
     for (let i = 0; i < sagas.length; i++) {
-      yield spawn(sagas[i]);
+      yield fork(tryCatch(sagas[i]));
     }
   }, sagas);
 }

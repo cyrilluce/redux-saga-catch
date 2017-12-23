@@ -36,3 +36,5 @@ function* rootSaga(){
   ])
 }
 ```
+
+## new helper `runAndTakeLatest` use to run task once before `takeLatest`, trigger will abort first running

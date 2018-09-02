@@ -15,16 +15,26 @@ import {
 } from "redux-saga/effects";
 
 /**
+ * The default error handler which calls `console.error`
+ * 调用`console.error`的默认错误处理程序
+ * @param {Error} error
+ */
+const defaultErrorHandler = function(error) {
+  console.error("Error caught by redux-saga-catch: ", error);
+};
+
+/**
  * Quick wrap a saga with `try catch`
  * 快速使用try catch包装saga
  * @param {Saga} saga
+ * @param {Function} [errorHandler=defaultErrorHandler]
  */
-export function tryCatch(saga) {
+export function tryCatch(saga, errorHandler = defaultErrorHandler) {
   const wrapped = function* wrappedTryCatch() {
     try {
       yield call(saga, ...arguments);
     } catch (e) {
-      console.error("Error caught by redux-saga-catch: ", e);
+      errorHandler(e);
     }
   };
   /** For debug trace. 用于调试时跟踪原始代码 */
@@ -73,11 +83,12 @@ export function throttle(ms, pattern, worker, ...args) {
  * usage/用法:
  * yield parallel([function*(){}, ...sagas])
  * @param {Saga[]} sagas
+ * @param {Function} [errorHandler=defaultErrorHandler]
  */
-export function parallel(sagas) {
+export function parallel(sagas, errorHandler = defaultErrorHandler) {
   return call(function*(sagas) {
     for (let i = 0; i < sagas.length; i++) {
-      yield fork(tryCatch(sagas[i]));
+      yield fork(tryCatch(sagas[i], errorHandler));
     }
   }, sagas);
 }

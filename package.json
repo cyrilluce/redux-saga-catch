@@ -31,5 +31,8 @@
   "bugs": {
     "url": "https://github.com/cyrilluce/redux-saga-catch/issues"
   },
-  "homepage": "https://github.com/cyrilluce/redux-saga-catch#readme"
+  "homepage": "https://github.com/cyrilluce/redux-saga-catch#readme",
+  "devDependencies": {
+    "redux-saga": "^1.1.3"
+  }
 }

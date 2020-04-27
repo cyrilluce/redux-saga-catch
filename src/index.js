@@ -15,11 +15,24 @@ import {
 } from "redux-saga/effects";
 
 /**
+ * Rename function
+ *
+ * @param {string} name
+ * @param {Function} fn
+ */
+function named(name, fn) {
+  Object.defineProperty(fn, "name", {
+    value: name
+  });
+  return fn;
+}
+
+/**
  * The default error handler which calls `console.error`
  * 调用`console.error`的默认错误处理程序
  * @param {Error} error
  */
-const defaultErrorHandler = function(error) {
+const defaultErrorHandler = function (error) {
   console.error("Error caught by redux-saga-catch: ", error);
 };
 
@@ -30,13 +43,13 @@ const defaultErrorHandler = function(error) {
  * @param {Function} [errorHandler=defaultErrorHandler]
  */
 export function tryCatch(saga, errorHandler = defaultErrorHandler) {
-  const wrapped = function* wrappedTryCatch() {
+  const wrapped = named(`try(${saga.name})`, function* wrappedTryCatch() {
     try {
       yield call(saga, ...arguments);
     } catch (e) {
       errorHandler(e);
     }
-  };
+  });
   /** For debug trace. 用于调试时跟踪原始代码 */
   wrapped._original = saga;
   return wrapped;
@@ -86,7 +99,7 @@ export function throttle(ms, pattern, worker, ...args) {
  * @param {Function} [errorHandler=defaultErrorHandler]
  */
 export function parallel(sagas, errorHandler = defaultErrorHandler) {
-  return call(function*(sagas) {
+  return call(function* (sagas) {
     for (let i = 0; i < sagas.length; i++) {
       yield fork(tryCatch(sagas[i], errorHandler));
     }
@@ -104,14 +117,16 @@ export function parallel(sagas, errorHandler = defaultErrorHandler) {
  */
 export function runAndTakeLatest(pattern, saga, ...args) {
   saga = tryCatch(saga);
-  return fork(function*() {
-    let lastTask, action;
-    while (true) {
-      if (lastTask) {
-        yield cancel(lastTask); // cancel is no-op if the task has already terminated
+  return fork(
+    named(`runAndTakeLatest(${saga.name})`, function* () {
+      let lastTask, action;
+      while (true) {
+        if (lastTask) {
+          yield cancel(lastTask); // cancel is no-op if the task has already terminated
+        }
+        lastTask = yield fork(saga, ...args, action);
+        action = yield take(pattern);
       }
-      lastTask = yield fork(saga, ...args, action);
-      action = yield take(pattern);
-    }
-  });
+    })
+  );
 }

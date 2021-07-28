@@ -1,4 +1,4 @@
-# saga-duck
+# redux-saga-catch
 Helper for redux-saga, auto wrap saga with try-catch, prevent one throw stop all.
 redux-saga工具集，为了业务健壮，自动将saga进行try-catch包装，避免一个出错导致其它saga也出错中止。
 

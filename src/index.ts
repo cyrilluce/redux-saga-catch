@@ -20,7 +20,7 @@ import {
  * @param {string} name
  * @param {Function} fn
  */
-function named(name, fn) {
+export function named<T extends Function>(name: string, fn: T): T {
   Object.defineProperty(fn, "name", {
     value: name
   });
@@ -51,6 +51,7 @@ export function tryCatch(saga, errorHandler = defaultErrorHandler) {
     }
   });
   /** For debug trace. 用于调试时跟踪原始代码 */
+  // @ts-ignore
   wrapped._original = saga;
   return wrapped;
 }
@@ -62,7 +63,8 @@ export function tryCatch(saga, errorHandler = defaultErrorHandler) {
  * @param {Saga} worker
  * @param {*} args
  */
-export function takeEvery(pattern, worker, ...args) {
+export const takeEvery: typeof _takeEvery = function takeEvery(pattern, worker, ...args: any[]) {
+  // @ts-ignore
   return _takeEvery(pattern, tryCatch(worker), ...args);
 }
 
@@ -73,19 +75,17 @@ export function takeEvery(pattern, worker, ...args) {
  * @param {Saga} worker
  * @param {*} args
  */
-export function takeLatest(pattern, worker, ...args) {
+export const takeLatest: typeof _takeLatest = function takeLatest(pattern, worker, ...args) {
+  // @ts-ignore
   return _takeLatest(pattern, tryCatch(worker), ...args);
 }
 
 /**
  * Like saga's throttle, but swallow exception and don't cancel the throttleHelper.
  * 类似于saga原生的throttle，但是出错也不会导致监听中止
- * @param {*} ms
- * @param {*} pattern
- * @param {Saga} worker
- * @param {*} args
  */
-export function throttle(ms, pattern, worker, ...args) {
+export const throttle: typeof _throttle = function throttle(ms, pattern, worker, ...args) {
+  // @ts-ignore
   return _throttle(ms, pattern, tryCatch(worker), ...args);
 }
 
@@ -130,3 +130,4 @@ export function runAndTakeLatest(pattern, saga, ...args) {
     })
   );
 }
+

@@ -8,11 +8,13 @@ import {
   takeEvery as _takeEvery,
   takeLatest as _takeLatest,
   throttle as _throttle,
+  select,
   call,
   fork,
   cancel,
-  take
+  take,
 } from "redux-saga/effects";
+import * as deepEqual from 'fast-deep-equal'
 
 /**
  * Rename function
@@ -38,6 +40,7 @@ const defaultErrorHandler = function (error) {
 
 /**
  * Quick wrap a saga with `try catch`
+ * 
  * 快速使用try catch包装saga
  * @param {Saga} saga
  * @param {Function} [errorHandler=defaultErrorHandler]
@@ -58,6 +61,7 @@ export function tryCatch(saga, errorHandler = defaultErrorHandler) {
 
 /**
  * Like saga's takeEvery, but swallow exception and don't cancel the takeEveryHelper.
+ * 
  * 类似于saga原生的takeEvery，但是出错也不会导致监听中止
  * @param {*} pattern
  * @param {Saga} worker
@@ -70,6 +74,7 @@ export const takeEvery: typeof _takeEvery = function takeEvery(pattern, worker, 
 
 /**
  * Like saga's takeLatest, but swallow exception and don't cancel the takeLatestHelper.
+ * 
  * 类似于saga原生的takeLatest，但是出错也不会导致监听中止
  * @param {*} pattern
  * @param {Saga} worker
@@ -82,6 +87,7 @@ export const takeLatest: typeof _takeLatest = function takeLatest(pattern, worke
 
 /**
  * Like saga's throttle, but swallow exception and don't cancel the throttleHelper.
+ * 
  * 类似于saga原生的throttle，但是出错也不会导致监听中止
  */
 export const throttle: typeof _throttle = function throttle(ms, pattern, worker, ...args) {
@@ -91,12 +97,13 @@ export const throttle: typeof _throttle = function throttle(ms, pattern, worker,
 
 /**
  * run child sagas parallel, and child saga's exception don't cancel current saga.
+ * 
  * 并行执行多个子saga，并且子saga出错不会影响父saga以及其它同级saga。
  *
  * usage/用法:
+ * ```typescript
  * yield parallel([function*(){}, ...sagas])
- * @param {Saga[]} sagas
- * @param {Function} [errorHandler=defaultErrorHandler]
+ * ```
  */
 export function parallel(sagas, errorHandler = defaultErrorHandler) {
   return call(function* (sagas) {
@@ -108,12 +115,12 @@ export function parallel(sagas, errorHandler = defaultErrorHandler) {
 
 /**
  * similar to takeLatest, buy fork saga first.
+ * 
  * 与takeLatest相似，但会先fork执行一次saga。
- * takeLatest:  while( pattern ){ saga }
- * runAndTakeLatest:  do{ saga }while( pattern )
- * @param {*} pattern
- * @param {*} saga
- * @param {*} args
+ * 
+ * Difference:
+ *  - takeLatest:  while( pattern ){ saga }
+ *  - runAndTakeLatest:  do{ saga }while( pattern )
  */
 export function runAndTakeLatest(pattern, saga, ...args) {
   saga = tryCatch(saga);
@@ -131,3 +138,76 @@ export function runAndTakeLatest(pattern, saga, ...args) {
   );
 }
 
+
+type Pattern = Parameters<typeof take>[0]
+function watch<T>(
+  types: Pattern,
+  selector: (globalState: any) => T,
+  ignoreOnce = false
+) {
+  let lastData: T
+  return call(function* () {
+    while (1) {
+      let action
+      // 可指定跳过首次
+      if (ignoreOnce) {
+        ignoreOnce = false
+      } else {
+        // 等待触发
+        action = yield take(types)
+      }
+      // 判断值是否有变化
+      const data = selector(yield select())
+      if (!deepEqual(data, lastData)) {
+        lastData = data
+        // 有变化，开始执行任务
+        return [data, action]
+      }
+    }
+  })
+}
+
+/**
+ * Similar to `takeLatest`, but only re-run on selector result changed.
+ * 
+ * 与 `takeLatest` 类似，但只在 `selector` 返回值有变化时重新执行.
+ */
+export function watchLatest<T>(
+  types: Pattern,
+  selector: (globalState: any) => T,
+  saga: (data: T, action?) => IterableIterator<any>,
+  runFirst = false
+) {
+  saga = tryCatch(saga)
+  const watcher = watch(types, selector, runFirst)
+  return fork(
+    named(
+      runFirst
+        ? `runAndWatchLatest(${saga.name})`
+        : `watchLatest(${saga.name})`,
+      function* () {
+        let lastTask
+        while (true) {
+          const [data, action]: [T, any] = yield watcher
+          if (lastTask) {
+            yield cancel(lastTask) // cancel is no-op if the task has already terminated
+          }
+          lastTask = yield fork(saga, data, action)
+        }
+      }
+    )
+  )
+}
+
+/**
+ * Similar to `runAndTakeLatest`, but only re-run on selector result changed.
+ * 
+ * 与 `runAndTakeLatest` 类似，但只在 `selector` 返回值有变化时重新执行.
+ */
+export function runAndWatchLatest<T>(
+  types: Pattern,
+  selector: (globalState: any) => T,
+  saga: (data: T, action?) => IterableIterator<any>
+) {
+  return watchLatest(types, selector, saga, true)
+}

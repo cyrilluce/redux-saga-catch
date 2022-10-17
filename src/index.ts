@@ -8,14 +8,19 @@ import {
   takeEvery as _takeEvery,
   takeLatest as _takeLatest,
   throttle as _throttle,
+  Pattern as _Pattern,
   select,
   call,
   fork,
   cancel,
   take,
+  ForkEffect,
 } from "redux-saga/effects";
 import * as deepEqual from 'fast-deep-equal'
 
+// compalibility with redux-saga 0.x
+type Pattern = _Pattern<any>
+type HelperResult = ForkEffect
 /**
  * Rename function
  *
@@ -105,7 +110,7 @@ export const throttle: typeof _throttle = function throttle(ms, pattern, worker,
  * yield parallel([function*(){}, ...sagas])
  * ```
  */
-export function parallel(sagas, errorHandler = defaultErrorHandler) {
+export function parallel(sagas, errorHandler = defaultErrorHandler): ReturnType<typeof call> {
   return call(function* (sagas) {
     for (let i = 0; i < sagas.length; i++) {
       yield fork(tryCatch(sagas[i], errorHandler));
@@ -122,7 +127,7 @@ export function parallel(sagas, errorHandler = defaultErrorHandler) {
  *  - takeLatest:  while( pattern ){ saga }
  *  - runAndTakeLatest:  do{ saga }while( pattern )
  */
-export function runAndTakeLatest(pattern, saga, ...args) {
+export function runAndTakeLatest(pattern, saga, ...args): HelperResult {
   saga = tryCatch(saga);
   return fork(
     named(`runAndTakeLatest(${saga.name})`, function* () {
@@ -139,7 +144,6 @@ export function runAndTakeLatest(pattern, saga, ...args) {
 }
 
 
-type Pattern = Parameters<typeof take>[0]
 function watch<T>(
   types: Pattern,
   selector: (globalState: any) => T,
@@ -177,7 +181,7 @@ export function watchLatest<T>(
   selector: (globalState: any) => T,
   saga: (data: T, action?) => IterableIterator<any>,
   runFirst = false
-) {
+): HelperResult {
   saga = tryCatch(saga)
   const watcher = watch(types, selector, runFirst)
   return fork(
@@ -208,6 +212,6 @@ export function runAndWatchLatest<T>(
   types: Pattern,
   selector: (globalState: any) => T,
   saga: (data: T, action?) => IterableIterator<any>
-) {
+): HelperResult {
   return watchLatest(types, selector, saga, true)
 }

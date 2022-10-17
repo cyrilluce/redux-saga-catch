@@ -3,7 +3,6 @@
   "version": "1.1.0",
   "description": "Helper for redux-saga, auto wrap saga with try-catch, prevent one throw stop all.",
   "main": "build/index.js",
-  "module": "build/index.js",
   "types": "build/index.d.ts",
   "peerDependencies": {
     "redux-saga": ">= 0.15 <= 1"

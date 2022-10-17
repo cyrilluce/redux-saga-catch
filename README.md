@@ -59,3 +59,15 @@ function* saga(){
   })
 }
 ```
+
+# Upgrade from 0.0.9
+1.x has added typescript support, if you are using 0.x, and meeting issue with typings check, you can overwrite `redux`'s `Action` interface
+```typescript
+declare module 'redux'{
+  interface Action{
+    type: any
+    payload?: any
+    [key: string]: any
+  }
+}
+```

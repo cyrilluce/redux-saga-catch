@@ -17,6 +17,7 @@ import {
   ForkEffect,
 } from "redux-saga/effects";
 import * as deepEqual from 'fast-deep-equal'
+import { CANCEL } from "redux-saga";
 
 // compalibility with redux-saga 0.x
 type Pattern = _Pattern<any>
@@ -214,4 +215,22 @@ export function runAndWatchLatest<T>(
   saga: (data: T, action?) => IterableIterator<any>
 ): HelperResult {
   return watchLatest(types, selector, saga, true)
+}
+
+/** For legacy redux-saga(0.x) compatibility */
+export function delay(ms) {
+  var val = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+  var timeoutId = void 0;
+  var promise = new Promise(function (resolve) {
+    timeoutId = setTimeout(function () {
+      return resolve(val);
+    }, ms);
+  });
+
+  promise[CANCEL] = function () {
+    return clearTimeout(timeoutId);
+  };
+
+  return promise;
 }

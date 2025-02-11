@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> This project is no longer maintained
+
+---
+
 # redux-saga-catch
 Helper for redux-saga, auto wrap saga with try-catch, prevent one throw stop all.
 
